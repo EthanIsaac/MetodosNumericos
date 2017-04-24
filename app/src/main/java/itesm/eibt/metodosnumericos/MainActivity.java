@@ -1,9 +1,20 @@
 package itesm.eibt.metodosnumericos;
 
+import android.graphics.Color;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -27,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     private Button btnDOS;
     private Button btnTRES;
     private Button btnMenu;
+    private Button btnGenerar;
+    private Button btnResuelve;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,11 +87,129 @@ public class MainActivity extends AppCompatActivity {
 
     private void cargaGauss() {
         setContentView(R.layout.activity_gauss);
+        //TODO DESPUÉS DE AQUÍ
+        limpiarScroll();
+        crearTabla(3);
+        btnMenu = (Button) findViewById(R.id.boton_menu);
+        btnMenu.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                cargaMenu();
+            }
+        });
+        btnResuelve = (Button) findViewById(R.id.boton_resuelve);
+        btnResuelve.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                Float[][] m = convierteTablaMatriz((TableLayout)findViewById(R.id.table)); // Obtengo la matriz flotante
+                resolverMatriz(m);
+            }
+        });
+        btnGenerar = (Button) findViewById(R.id.boton_generar);
+        btnGenerar.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                limpiarScroll();
+                EditText size   = (EditText)findViewById(R.id.edit_size);
+                crearTabla(Integer.parseInt(size.getText().toString()));
+            }
+        });
+    }
+
+    private void resolverMatriz(Float[][] m) {
+        LinearLayout scroll = (LinearLayout) findViewById(R.id.scroll);
+        scroll.addView(generaImprimible(m)); // SE USA PARA IMPRIMIR UNA MATRIZ m Flotante de nxn.
+        scroll.addView(generaImprimible(ordenar(m)));
+    }
+
+    private Float[][] convierteTablaMatriz(TableLayout tabla) {
+        int filas = tabla.getChildCount();
+        int columnas = filas+1;
+        Float[][] matriz = new Float[filas][columnas];
+        for(int i=0;i<filas;i++)
+        {
+            for(int j=0;j<columnas;j++)
+            {
+                EditText value = (EditText)((TableRow)tabla.getChildAt(i)).getChildAt(j);
+                matriz[i][j] = Float.parseFloat(value.getText().toString());
+            }
+        }
+        return matriz;
+    }
+
+    private void limpiarScroll() {
+        LinearLayout scroll = (LinearLayout) findViewById(R.id.scroll);
+        scroll.removeAllViews();
+        scroll.setOrientation(LinearLayout.VERTICAL);
+        TableLayout tabla = new TableLayout(this);
+        tabla.setId(R.id.table);
+        scroll.addView(tabla);
+    }
+
+    private void crearTabla(int size) {
+        TableLayout tabla = (TableLayout) findViewById(R.id.table);;
+        tabla.removeAllViews();
+        for(int i=0;i<size;i++)
+        {
+            TableRow tr = new TableRow(this);
+            tr.setGravity(Gravity.CENTER_HORIZONTAL);
+            for(int j=0;j<=size;j++)
+            {
+                EditText et = new EditText(this);
+                et.setWidth(150);
+                et.setInputType(InputType.TYPE_CLASS_NUMBER);
+                et.setTextSize(15);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    et.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                }
+                if(j==size)
+                {
+                    et.setBackgroundColor(Color.GRAY);
+                }
+                tr.addView(et);
+            }
+            tabla.addView(tr);
+        }
     }
 
     private void mostrarGrafico(LineGraphSeries<DataPoint> series) {
         GraphView graph = (GraphView) findViewById(R.id.graph);
         graph.addSeries(series);
+    }
+
+    private TableLayout generaImprimible(Float[][] matriz)
+    {
+        int size = matriz.length;
+        TableLayout tabla = new TableLayout(this);
+        for(int i=-1;i<size+1;i++)
+        {
+            TableRow tr = new TableRow(this);
+            tr.setGravity(Gravity.CENTER_HORIZONTAL);
+            for(int j=0;j<=size;j++)
+            {
+                TextView tv = new TextView(this);
+                tv.setWidth(150);
+                tv.setTextSize(15);
+                if((i>-1)&&(i<size))
+                {
+                    tv.setText(""+matriz[i][j]);
+                    if(j==size)
+                    {
+                        tv.setBackgroundColor(Color.GRAY);
+                    }
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    tv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                }
+                tr.addView(tv);
+            }
+            tabla.addView(tr);
+        }
+        return tabla;
+
     }
 
     private Float[][] ordenar(Float[][] matriz)
