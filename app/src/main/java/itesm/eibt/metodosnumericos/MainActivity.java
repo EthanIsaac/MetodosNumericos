@@ -2,16 +2,14 @@ package itesm.eibt.metodosnumericos;
 
 import android.graphics.Color;
 import android.os.Build;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -104,7 +102,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Float[][] m = convierteTablaMatriz((TableLayout)findViewById(R.id.table)); // Obtengo la matriz flotante
-                resolverMatriz(m);
+                if(m!=null)
+                {
+                    resolverMatriz(m);
+                }
             }
         });
         btnGenerar = (Button) findViewById(R.id.boton_generar);
@@ -120,9 +121,61 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void resolverMatriz(Float[][] m) {
+        int size = m.length;
         LinearLayout scroll = (LinearLayout) findViewById(R.id.scroll);
-        scroll.addView(generaImprimible(m)); // SE USA PARA IMPRIMIR UNA MATRIZ m Flotante de nxn.
-        scroll.addView(generaImprimible(ordenar(m)));
+        TableLayout tabla = (TableLayout) scroll.getChildAt(0);
+        limpiarScroll();
+        scroll.removeViewAt(0);
+        scroll.addView(tabla);
+        m = ordenar(m); // Ordena la matriz
+        scroll.addView(generaImprimible(m)); // Imprime la matriz ordenada
+        m = dividirEnPivote(m,0); // Divide la primera línea entre el pivote
+        scroll.addView(generaImprimible(m)); // Imprime
+        for(int i=1;i<size;i++)
+        {
+            for(int j=0;j<i;j++)
+            {
+                if(m[i][j]!=0)
+                {
+                    Float pivote = m[i][j];
+                    for(int k=0;k<=size;k++)
+                    {
+                        m[i][k]=m[i][k]-(m[j][k]*pivote);
+                    }
+                    scroll.addView(generaImprimible(m));
+                }
+            }
+            if(m[i][i]!=1)
+            {
+                m = dividirEnPivote(m,i);
+                scroll.addView(generaImprimible(m));
+            }
+        }
+        for(int i=size-2;i>=0;i--)
+        {
+            for(int j=size-1;j>i;j--)
+            {
+                if(m[i][j]!=0)
+                {
+                    Float pivote = m[i][j];
+                    for(int k=0;k<=size;k++)
+                    {
+                        m[i][k]=m[i][k]-(m[j][k]*pivote);
+                    }
+                    scroll.addView(generaImprimible(m));
+                }
+            }
+        }
+    }
+
+    private Float[][] dividirEnPivote(Float[][] matriz, int linea) {
+        int size = matriz.length;
+        Float pivote = matriz[linea][linea];
+        for(int i=0;i<=size;i++)
+        {
+            matriz[linea][i]=matriz[linea][i]/pivote;
+        }
+        return matriz;
     }
 
     private Float[][] convierteTablaMatriz(TableLayout tabla) {
@@ -133,7 +186,16 @@ public class MainActivity extends AppCompatActivity {
         {
             for(int j=0;j<columnas;j++)
             {
+
                 EditText value = (EditText)((TableRow)tabla.getChildAt(i)).getChildAt(j);
+                if(value.getText().toString().equals(""))
+                {
+                    /*AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+                    dialogBuilder.setMessage("No dejes celdas en blanco!");
+                    dialogBuilder.setCancelable(true).setTitle("ALERTA: CELDAS VACÍAS");
+                    dialogBuilder.create().show();*/
+                    return null;
+                }
                 matriz[i][j] = Float.parseFloat(value.getText().toString());
             }
         }
