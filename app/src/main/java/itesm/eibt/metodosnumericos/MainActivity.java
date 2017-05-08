@@ -33,7 +33,7 @@ LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
 public class MainActivity extends AppCompatActivity {
 
     private Button btnGauss;
-    private Button btnDOS;
+    private Button btnEuler;
     private Button btnTRES;
     private Button btnMenu;
     private Button btnGenerar;
@@ -54,12 +54,12 @@ public class MainActivity extends AppCompatActivity {
                 cargaGauss();
             }
         });
-        btnDOS = (Button) findViewById(R.id.boton_dos);
-        btnDOS.setOnClickListener(new View.OnClickListener() {
+        btnEuler = (Button) findViewById(R.id.boton_euler);
+        btnEuler.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
-                cargaGrafico();
+                cargaEuler();
             }
         });
         btnTRES = (Button) findViewById(R.id.boton_tres);
@@ -69,6 +69,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
             }
         });
+    }
+
+    private void cargaEuler() {
+        setContentView(R.layout.activity_euler);
     }
 
     private void cargaGrafico() {

@@ -37,7 +37,7 @@
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
     <Button
-        android:id="@+id/boton_dos"
+        android:id="@+id/boton_euler"
         android:layout_width="200dp"
         android:layout_height="60dp"
         android:layout_gravity="center_horizontal|bottom"
@@ -65,6 +65,6 @@
         android:layout_marginRight="8dp"
         app:layout_constraintRight_toRightOf="parent"
         android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@+id/boton_dos" />
+        app:layout_constraintTop_toBottomOf="@+id/boton_euler" />
 
 </android.support.constraint.ConstraintLayout>
