@@ -11,12 +11,53 @@
         android:layout_height="43dp"
         android:textSize="25dp"
         android:textAlignment="center"
-        android:text="Método de Gauss"/>
-    <Button
-        android:id="@+id/boton_resuelve"
-        android:layout_width="137dp"
-        android:layout_height="38dp"
-        android:text="Resolver" />
+        android:text="Método de División Sintética"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:gravity="right"
+            android:text="rr = "
+            android:textSize="22dp" />
+
+        <EditText
+            android:id="@+id/edit_rr"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:inputType="numberDecimal|numberSigned"
+            android:text="1"
+            android:textAlignment="center" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:gravity="right"
+            android:text="ss = "
+            android:textSize="22dp" />
+
+        <EditText
+            android:id="@+id/edit_ss"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:inputType="numberDecimal|numberSigned"
+            android:text="1"
+            android:textAlignment="center" />
+
+        <Button
+            android:id="@+id/boton_resuelve"
+            android:layout_width="139dp"
+            android:layout_height="38dp"
+            android:layout_weight="1"
+            android:text="Resolver" />
+
+    </LinearLayout>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="19dp"></FrameLayout>
@@ -46,13 +87,13 @@
             android:layout_height="match_parent"
             android:textSize="22dp"
             android:gravity="right"
-            android:text="Tamaño de la matriz: "/>
+            android:text="Grado del polinomio: "/>
 
         <EditText
             android:id="@+id/edit_size"
             android:layout_width="58dp"
             android:layout_height="match_parent"
-            android:text="3"
+            android:text="2"
             android:textAlignment="center"
             android:inputType="number"/>
 
