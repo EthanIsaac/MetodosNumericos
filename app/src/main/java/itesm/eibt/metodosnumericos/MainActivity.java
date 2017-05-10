@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
         // TODO DESPUÉS DE AQUÍ
         isMenuUp = false;
         limpiarScroll();
-        crearTablaDivisionSintetica(3);
+        crearTablaDivisionSintetica(2);
         btnMenu = (Button) findViewById(R.id.boton_menu);
         btnMenu.setOnClickListener(new View.OnClickListener() {
 
@@ -125,14 +125,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private ArrayList obtenerCoeficientesDivisionSinteticaDoble(TableLayout tabla)
-    {
+    private ArrayList obtenerCoeficientesDivisionSinteticaDoble(TableLayout tabla)  {
         ArrayList coeficientes = new ArrayList();
         int filas = tabla.getChildCount();
         for(int i=filas-1;i>=0;i--)
         {
             int columnas = ((TableRow)tabla.getChildAt(i)).getChildCount();
-            for(int j=columnas-1;j>=0;j--)
+            for(int j=columnas-2;j>=0;j-=2)
             {
                 EditText value = (EditText)((TableRow)tabla.getChildAt(i)).getChildAt(j);
                 if(value.getText().toString().equals(""))
@@ -204,7 +203,6 @@ public class MainActivity extends AppCompatActivity {
         limpiarScroll();
         scroll.removeViewAt(0);
         scroll.addView(tabla);
-        Log.d("DEBERIA","FUNCIONAR");
         // Declaración de variables
         ArrayList a = obtenerCoeficientesDivisionSinteticaDoble(tabla);
         ArrayList b, c;
@@ -245,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         TextView resultados = new TextView(this);
-        resultados.setText(valores);
+        resultados.setText("\nLas raices del polinomio son:\n\n" + valores);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             resultados.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         }
