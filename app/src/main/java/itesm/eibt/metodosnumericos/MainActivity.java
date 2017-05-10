@@ -1,8 +1,10 @@
 package itesm.eibt.metodosnumericos;
 
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
 import android.util.Log;
@@ -18,6 +20,8 @@ import android.widget.TextView;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -109,7 +113,26 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 EditText rr   = (EditText)findViewById(R.id.edit_rr);
                 EditText ss   = (EditText)findViewById(R.id.edit_ss);
-                divisionTotal(Float.parseFloat(rr.getText().toString()),Float.parseFloat(ss.getText().toString()));
+                Float rrNum = null;
+                try{
+                    rrNum = Float.parseFloat(rr.getText().toString());
+                }catch (Exception e) {  }
+                Float ssNum = null;
+                try{
+                    ssNum = Float.parseFloat(ss.getText().toString());
+                }catch (Exception e) {  }
+                ArrayList coeficientes = obtenerCoeficientesDivisionSinteticaDoble((TableLayout)findViewById(R.id.table));
+                if(coeficientes!=null)
+                {
+                    if(rrNum!=null && ssNum!=null)
+                    {
+                        divisionTotal(coeficientes,rrNum,ssNum);
+                    }
+                    else
+                    {
+                        muestraAlerta("¡INGRESA UN VALOR PARA rr Y ss!");
+                    }
+                }
 
             }
         });
@@ -136,10 +159,7 @@ public class MainActivity extends AppCompatActivity {
                 EditText value = (EditText)((TableRow)tabla.getChildAt(i)).getChildAt(j);
                 if(value.getText().toString().equals(""))
                 {
-                    /*AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-                    dialogBuilder.setMessage("No dejes celdas en blanco!");
-                    dialogBuilder.setCancelable(true).setTitle("ALERTA: CELDAS VACÍAS");
-                    dialogBuilder.create().show();*/
+                    muestraAlerta("¡NO DEJES CELDAS EN BLANCO!");
                     return null;
                 }
                 coeficientes.add(Float.parseFloat(value.getText().toString()));
@@ -196,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void divisionTotal(Float rr, Float ss)  {
+    private void divisionTotal(ArrayList a, Float rr, Float ss)  {
         // Limpio el scroll
         LinearLayout scroll = (LinearLayout) findViewById(R.id.scroll);
         TableLayout tabla = (TableLayout) scroll.getChildAt(0);
@@ -204,14 +224,12 @@ public class MainActivity extends AppCompatActivity {
         scroll.removeViewAt(0);
         scroll.addView(tabla);
         // Declaración de variables
-        ArrayList a = obtenerCoeficientesDivisionSinteticaDoble(tabla);
         ArrayList b, c;
         int t;
         Float r, s, delta, dr, ds, tol;
         String valores;
         // Construccion de objetos
         b = a;
-        c = new ArrayList();
         t = a.size();
         r = rr;
         s = ss;
@@ -233,14 +251,14 @@ public class MainActivity extends AppCompatActivity {
             valores += solucionesDeX(1.0f,-r,-s);
             t-=2;
             a=b;
-            if(t==3)
-            {
-                valores += solucionesDeX(Float.parseFloat(b.get(0).toString()),Float.parseFloat(b.get(1).toString()),Float.parseFloat(b.get(2).toString()));
-            }
-            else
-            {
-                valores += solucionesDeX(0.0f,Float.parseFloat(b.get(0).toString()),Float.parseFloat(b.get(1).toString()));
-            }
+        }
+        if(t==3)
+        {
+            valores += solucionesDeX(Float.parseFloat(b.get(0).toString()),Float.parseFloat(b.get(1).toString()),Float.parseFloat(b.get(2).toString()));
+        }
+        else
+        {
+            valores += solucionesDeX(0.0f,Float.parseFloat(b.get(0).toString()),Float.parseFloat(b.get(1).toString()));
         }
         TextView resultados = new TextView(this);
         resultados.setText("\nLas raices del polinomio son:\n\n" + valores);
@@ -425,10 +443,7 @@ public class MainActivity extends AppCompatActivity {
                 EditText value = (EditText)((TableRow)tabla.getChildAt(i)).getChildAt(j);
                 if(value.getText().toString().equals(""))
                 {
-                    /*AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-                    dialogBuilder.setMessage("No dejes celdas en blanco!");
-                    dialogBuilder.setCancelable(true).setTitle("ALERTA: CELDAS VACÍAS");
-                    dialogBuilder.create().show();*/
+                    muestraAlerta("¡NO DEJES CELDAS EN BLANCO!");
                     return null;
                 }
                 matriz[i][j] = Float.parseFloat(value.getText().toString());
@@ -544,5 +559,16 @@ public class MainActivity extends AppCompatActivity {
         TableLayout tabla = new TableLayout(this);
         tabla.setId(R.id.table);
         scroll.addView(tabla);
+    }
+
+    private void muestraAlerta(String s)    {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setMessage(s);
+        alertDialogBuilder.setCancelable(false).setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+            }
+        });
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
     }
 }
