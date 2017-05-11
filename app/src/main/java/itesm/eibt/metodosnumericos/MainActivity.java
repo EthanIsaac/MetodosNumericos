@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -20,8 +19,6 @@ import android.widget.TextView;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -42,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isMenuUp;
     private Button btnGauss;
     private Button btnDivisionSinteticaDoble;
-    private Button btnTRES;
+    private Button btnMinimosCuadrados;
     private Button btnMenu;
     private Button btnGenerar;
     private Button btnResuelve;
@@ -79,18 +76,27 @@ public class MainActivity extends AppCompatActivity {
         btnDivisionSinteticaDoble.setOnClickListener(new View.OnClickListener() {
 
             @Override
-            public void onClick(View view) {
-                cargaDivisionSinteticaDoble();
+            public void onClick(View view) { cargaDivisionSinteticaDoble();
             }
         });
-        btnTRES = (Button) findViewById(R.id.boton_tres);
-        btnTRES.setOnClickListener(new View.OnClickListener() {
+        btnMinimosCuadrados = (Button) findViewById(R.id.boton_minimoscuadrados);
+        btnMinimosCuadrados.setOnClickListener(new View.OnClickListener() {
 
             @Override
-            public void onClick(View view) {
-            }
+            public void onClick(View view) { cargaMinimosCuadrados(); }
         });
     }
+
+    // MÉTODOS MÍNIMOS CUADRADOS
+
+    private void cargaMinimosCuadrados()
+    {
+        setContentView(R.layout.activity_divisionsinteticadoble);
+        // TODO DESPUÉS DE AQUÍ
+        isMenuUp = false;
+    }
+
+    // MÉTODOS DIVISIÓN SINTÉTICA
 
     private void cargaDivisionSinteticaDoble() {
         setContentView(R.layout.activity_divisionsinteticadoble);
@@ -141,9 +147,20 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View view) {
-                limpiarScroll();
-                EditText size   = (EditText)findViewById(R.id.edit_size);
-                crearTablaDivisionSintetica(Integer.parseInt(size.getText().toString()));
+                EditText size = (EditText)findViewById(R.id.edit_size);
+                int sizeNum = 0;
+                try{
+                    sizeNum = Integer.parseInt(size.getText().toString());
+                }catch (Exception e) {  }
+                if(sizeNum!=0)
+                {
+                    limpiarScroll();
+                    crearTablaDivisionSintetica(sizeNum);
+                }
+                else
+                {
+                    muestraAlerta("¡INGRESA UN GRADO DE POLINOMIO VÁLIDO (MAYOR A CERO)!");
+                }
             }
         });
     }
@@ -261,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
             valores += solucionesDeX(0.0f,Float.parseFloat(b.get(0).toString()),Float.parseFloat(b.get(1).toString()));
         }
         TextView resultados = new TextView(this);
-        resultados.setText("\nLas raices del polinomio son:\n\n" + valores);
+        resultados.setText("\nLas raices del polinomio son:\n" + valores);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             resultados.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         }
@@ -278,22 +295,22 @@ public class MainActivity extends AppCompatActivity {
             {
                 x1 = (-b + (float)Math.sqrt(discriminante))/(2*a);
                 x2 = (-b - (float)Math.sqrt(discriminante))/(2*a);
-                soluciones += " x = " + x1 + "; x = " + x2 + ";";
+                soluciones += "\nx = " + x1 + ";\nx = " + x2 + ";";
             }
             else if(discriminante == 0)
             {
                 x1 = -b/(2*a);
-                soluciones += " x = " + x1 + ";";
+                soluciones += "\nx = " + x1 + ";";
             }
             else if(discriminante < 0)
             {
-                soluciones += " x = " + (-b/(2*a)) + " + " + ((float)Math.sqrt(-discriminante)/(2*a)) + "i;";
-                soluciones += " x = " + (-b/(2*a)) + " - " + ((float)Math.sqrt(-discriminante)/(2*a)) + "i;";
+                soluciones += "\nx = " + (-b/(2*a)) + " + " + ((float)Math.sqrt(-discriminante)/(2*a)) + "i;";
+                soluciones += "\nx = " + (-b/(2*a)) + " - " + ((float)Math.sqrt(-discriminante)/(2*a)) + "i;";
             }
         }
         else
         {
-            soluciones += " x = " + (-c/b) + ";";
+            soluciones += "\nx = " + (-c/b) + ";";
         }
         return soluciones;
     }
@@ -324,6 +341,8 @@ public class MainActivity extends AppCompatActivity {
         }
         return polinomioResultante;
     }
+
+    // MÉTODOS GAUSS JORDAN
 
     private void cargaGauss() {
         setContentView(R.layout.activity_gauss);
@@ -534,6 +553,8 @@ public class MainActivity extends AppCompatActivity {
         }
         return matriz;
     }
+
+    // MÉTODOS MISCELÁNEA
 
     private void cargaGrafico() {
         setContentView(R.layout.activity_grafico);
