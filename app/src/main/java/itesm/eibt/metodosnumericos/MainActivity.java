@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -20,22 +21,11 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
-import org.w3c.dom.Text;
+import org.lsmp.djep.djep.DJep;
+import org.nfunk.jep.Node;
+import org.nfunk.jep.ParseException;
 
 import java.util.ArrayList;
-import java.util.Objects;
-
-//RECURSOS
-/* Crear la tabla de datos
-LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
-                new DataPoint(0, 1),
-                new DataPoint(1, 5),
-                new DataPoint(2, 3),
-                new DataPoint(3, 2),
-                new DataPoint(4, 6)
-        });
- */
-
 
 public class MainActivity extends AppCompatActivity {
 
@@ -114,18 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 ArrayList datos = obtenerDatosInterpolacion((TableLayout)findViewById(R.id.table));
                 if(datos!=null)
                 {
-                    Float[][] m = new Float[3][3];
-                    m[0][0] = 1.0f;
-                    m[0][1] = 1.0f;
-                    m[0][2] = 0.0f;
-                    m[1][0] = 1.0f;
-                    m[1][1] = 0.0f;
-                    m[1][2] = 1.0f;
-                    m[2][0] = 0.0f;
-                    m[2][1] = 1.0f;
-                    m[2][2] = 0.0f;
                     calcularPolinomioInterpolacion(datos);
-                    calculaInversa(m);
                 }
             }
         });
@@ -153,37 +132,173 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void calcularPolinomioInterpolacion(ArrayList datos) {
+        LinearLayout scroll = (LinearLayout) findViewById(R.id.scroll);
+        TableLayout tabla = (TableLayout) scroll.getChildAt(0);
+        limpiarScroll();
+        scroll.removeViewAt(0);
+        scroll.addView(tabla);
+        int filas = datos.size();
+        int columnas = filas;
+        Float[][] matrizX = matrizCuadradaVacia(filas);
+        for(int i=0;i<filas;i++)
+        {
+            for(int j=0;j<columnas;j++)
+            {
+                matrizX[i][j]=(float)Math.pow(((parDeDatos)datos.get(i)).getX(),j);
+            }
+        }
+        Float[] matrizY = new Float[filas];
+        for(int i=0;i<filas;i++)
+        {
+            matrizY[i]=((parDeDatos)datos.get(i)).getY();
+        }
+        TextView polinomio = new TextView(this);
+        String polinomioString;
+        Float[] coeficientes = calculaCoeficientes(calculaInversa(matrizX),matrizY);
+        polinomioString = generaPolinonio(coeficientes);
+        polinomio.setText("f(x) =" + polinomioString);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            polinomio.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        }
+        scroll.addView(polinomio);
+        LineGraphSeries<DataPoint> puntosGrafico;
+        puntosGrafico = generaPuntos(polinomioString,buscaMenor(datos),buscaMayor(datos));
+        scroll.addView(creaGrafico(puntosGrafico));
+    }
 
+    private int buscaMenor(ArrayList numeros){
+        Float menor = ((parDeDatos)numeros.get(0)).getX();
+        for(int i=1;i<numeros.size();i++)
+        {
+            Float siguiente = ((parDeDatos)numeros.get(i)).getX();
+            if(siguiente<menor){
+                menor = siguiente;
+            }
+        }
+        return menor.intValue();
+    }
+
+    private int buscaMayor(ArrayList numeros){
+        Float mayor = ((parDeDatos)numeros.get(0)).getX();
+        for(int i=1;i<numeros.size();i++)
+        {
+            Float siguiente = ((parDeDatos)numeros.get(i)).getX();
+            if(siguiente>mayor){
+                mayor = siguiente;
+            }
+        }
+        return mayor.intValue();
+    }
+
+    private LineGraphSeries<DataPoint> generaPuntos(String funcion, int min, int max){
+        LineGraphSeries<DataPoint> puntos;
+        DataPoint[] dataPoint = new DataPoint[(max-min)*10];
+        DJep j = new DJep();
+//DJep es la clase encargada de la derivacion en su escencia
+        j.addStandardConstants();
+//agrega constantes estandares, pi, e, etc
+        j.addStandardFunctions();
+//agrega funciones estandares cos(x), sin(x)
+        j.addComplex();
+//por si existe algun numero complejo
+        j.setAllowUndeclared(true);
+//permite variables no declarables
+        j.setAllowAssignment(true);
+//permite asignaciones
+        j.setImplicitMul(true);
+//regla de multiplicacion o para sustraccion y sumas
+        j.addStandardDiffRules();
+        try{
+//coloca el nodo con una funcion preestablecida
+
+            int numPuntos = 0;
+//deriva la funcion con respecto a x
+            for(Double x=(double)min;x<(double)max;x+=0.1f)
+            {
+                Node node = j.parse(funcion);
+                Node node2 = j.parse(""+x);
+                Node ynode = j.substitute(node,"x",node2);
+//Simplificamos la funcion con respecto a x
+                Node simp = j.simplify(ynode);
+//Convertimos el valor simplificado en un String
+                Float y = Float.parseFloat(j.toString(simp));
+                dataPoint[numPuntos] = new DataPoint(x,y);
+                numPuntos++;
+            }
+        }
+        catch(ParseException e){ e.printStackTrace();}
+        puntos = new LineGraphSeries<>(dataPoint);
+        return puntos;
+    }
+
+    private String generaPolinonio(Float[] coeficientes) {
+        String polinomio = "";
+        int numCoeficientes = coeficientes.length;
+        for(int i=0;i<numCoeficientes;i++)
+        {
+            Float valor = coeficientes[i];
+            if(valor!=0.0f){
+                if(i==0){
+                    polinomio+= " " + valor;
+                }
+                else if(i==1){
+                    polinomio+= " (" + valor + "*x)";
+                }
+                else{
+                    polinomio+= " (" + valor + "*x^" + i + ")";
+                }
+                if(i<numCoeficientes-1){
+                    polinomio+=" +";
+                }
+            }
+        }
+        return polinomio;
     }
 
     private Float[] calculaCoeficientes(Float[][] matrizX, Float[] matrizY)   {
-        Float[] coeficientes = null;
+        int numCoeficientes = matrizY.length;
+        Float[] coeficientes = new Float[numCoeficientes];
+        for(int i=0;i<numCoeficientes;i++)
+        {
+            Float res=0.0f;
+            for(int j=0;j<numCoeficientes;j++)
+            {
+                res += matrizX[i][j]*matrizY[j];
+            }
+            coeficientes[i] = res;
+        }
         return coeficientes;
     }
 
-    private Float[][] calculaInversa(Float [][] matriz)   {
-        int n=matriz.length;  //dimensión de la matriz
-        Float[][] a = matriz;
-        Float[][] b = new Float[n][n];   //matriz de los términos independientes
-        Float[][] c = new Float[n][n];   //matriz de las incógnitas
-//matriz unidad
+    private Float[][] matrizCuadradaVacia(int n)  {
+        Float[][] m = new Float[n][n];
+        for(int i=0;i<n;i++)
+        {
+            for(int j=0;j<n;j++)
+            {
+                m[i][j]=0.0f;
+            }
+        }
+        return m;
+    }
+
+    private Float[][] calculaInversa(Float [][] a)   {
+        int n=a.length;
+        Float[][] b = matrizCuadradaVacia(n);
+        Float[][] c = matrizCuadradaVacia(n);
         for(int i=0; i<n; i++){
             b[i][i]=1.0f;
         }
-//transformación de la matriz y de los términos independientes
         for(int k=0; k<n-1; k++){
             for(int i=k+1; i<n; i++){
-//términos independientes
                 for(int s=0; s<n; s++){
                     b[i][s]-=a[i][k]*b[k][s]/a[k][k];
                 }
-//elementos de la matriz
                 for(int j=k+1; j<n; j++){
                     a[i][j]-=a[i][k]*a[k][j]/a[k][k];
                 }
             }
         }
-//cálculo de las incógnitas, elementos de la matriz inversa
         for(int s=0; s<n; s++){
             c[n-1][s]=b[n-1][s]/a[n-1][n-1];
             for(int i=n-2; i>=0; i--){
@@ -193,8 +308,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        LinearLayout scroll = (LinearLayout) findViewById(R.id.scroll);
-        scroll.addView(imprimeMatrizCuadrada(c));
         return c;
     }
 
@@ -217,7 +330,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void crearTablaInterpolacion(int size){
-        TableLayout tabla = (TableLayout) findViewById(R.id.table);;
+        LinearLayout scroll = (LinearLayout) findViewById(R.id.scroll);
+        scroll.setMinimumHeight(2000);
+        TableLayout tabla = (TableLayout) findViewById(R.id.table);
         tabla.removeAllViews();
         TableRow titulos = new TableRow(this);
         titulos.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -266,6 +381,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private GraphView creaGrafico(LineGraphSeries<DataPoint> series) {
+        GraphView grafica = new GraphView(this);
+        grafica.setId(R.id.graph);
+        grafica.addSeries(series);
+        grafica.setMinimumHeight(1400);
+        grafica.setHorizontalScrollBarEnabled(true);
+        grafica.getViewport().setScalable(true);
+        grafica.getViewport().setScalableY(true);
+        return grafica;
+    }
+
     private class parDeDatos extends Object{
         private Float x;
         private Float y;
@@ -285,29 +411,6 @@ public class MainActivity extends AppCompatActivity {
         public Float getY(){
             return this.y;
         }
-    }
-
-    private TableLayout imprimeMatrizCuadrada(Float[][] matriz)  {
-        int size = matriz.length;
-        TableLayout tabla = new TableLayout(this);
-        for(int i=0;i<size;i++)
-        {
-            TableRow tr = new TableRow(this);
-            tr.setGravity(Gravity.CENTER_HORIZONTAL);
-            for(int j=0;j<size;j++)
-            {
-                TextView tv = new TextView(this);
-                tv.setWidth(150);
-                tv.setTextSize(15);
-                tv.setText(""+matriz[i][j]);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                    tv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                }
-                tr.addView(tv);
-            }
-            tabla.addView(tr);
-        }
-        return tabla;
     }
 
     // MÉTODOS DIVISIÓN SINTÉTICA
@@ -768,23 +871,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // MÉTODOS MISCELÁNEA
-
-    private void cargaGrafico() {
-        setContentView(R.layout.activity_grafico);
-        btnMenu = (Button) findViewById(R.id.boton_menu);
-        btnMenu.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View view) {
-                cargaMenu();
-            }
-        });
-    }
-
-    private void mostrarGrafico(LineGraphSeries<DataPoint> series) {
-        GraphView graph = (GraphView) findViewById(R.id.graph);
-        graph.addSeries(series);
-    }
 
     private void limpiarScroll() {
         LinearLayout scroll = (LinearLayout) findViewById(R.id.scroll);
