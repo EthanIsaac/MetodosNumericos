@@ -11,7 +11,7 @@
         android:layout_height="43dp"
         android:textSize="25dp"
         android:textAlignment="center"
-        android:text="Método de Gauss"/>
+        android:text="Método de Gauss Jordan"/>
     <Button
         android:id="@+id/boton_resuelve"
         android:layout_width="137dp"
