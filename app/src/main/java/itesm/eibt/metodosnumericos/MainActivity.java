@@ -102,9 +102,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 ArrayList datos = obtenerDatosInterpolacion((TableLayout)findViewById(R.id.table));
-                if(datos!=null)
-                {
-                    calcularPolinomioInterpolacion(datos);
+                if(datos!=null){
+                    if(esFuncion(datos)){
+                        calcularPolinomioInterpolacion(datos);
+                    }
                 }
             }
         });
@@ -129,6 +130,20 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private boolean esFuncion(ArrayList datos) {
+        for(int i=0;i<datos.size();i++){
+            Float x = ((parDeDatos)datos.get(i)).getX();
+            for(int j=i+1;j<datos.size();j++){
+                Float xSig = ((parDeDatos)datos.get(j)).getX();
+                if(Math.abs(x-xSig)<0.0000000001){
+                    muestraAlerta("¡LOS DATOS INGRESADOS NO CORRESPONDEN A UNA FUNCIÓN!");
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private void calcularPolinomioInterpolacion(ArrayList datos) {
@@ -708,6 +723,15 @@ public class MainActivity extends AppCompatActivity {
         scroll.addView(tabla);
         m = ordenarMatriz(m); // Ordena la matriz
         scroll.addView(generaImprimible(m)); // Imprime la matriz ordenada
+        if(m[0][0]==0){
+            TextView mensaje = new TextView(this);
+            mensaje.setText("No se puede resolver la matriz.");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                mensaje.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            }
+            scroll.addView(mensaje);
+            return;
+        }
         m = dividirEnPivote(m,0); // Divide la primera línea entre el pivote
         scroll.addView(generaImprimible(m)); // Imprime
         for(int i=1;i<size;i++)
